@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../databse/database_helper.dart';
 import '../../utils/my_colors.dart';
+import '../../widgets/custom_back_button.dart';
+import '../../widgets/custom_header.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/custom_password_field.dart';
+import '../../widgets/submit_button.dart';
+import '../../widgets/sign_in_link.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -11,6 +17,7 @@ class RegisterView extends StatefulWidget {
 
 class _RegisterViewState extends State<RegisterView> {
   final _formKey = GlobalKey<FormState>();
+  final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -18,31 +25,25 @@ class _RegisterViewState extends State<RegisterView> {
 
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
-      final email = _emailController.text;
-      final password = _passwordController.text;
-
-      // Sprawdzenie, czy e-mail już istnieje w bazie danych
-      final emailExists = await _dbHelper.emailExists(email);
+      final emailExists = await _dbHelper.emailExists(_emailController.text.trim());
       if (emailExists) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email already in use!')),
+          const SnackBar(content: Text('Email already exists!')),
         );
         return;
       }
 
-      // Dodanie nowego użytkownika do bazy danych
-      await _dbHelper.insertUser(email, password);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration successful!')),
+      await _dbHelper.insertUser(
+        _fullNameController.text.trim(),
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
 
-      // Przejdź do poprzedniego ekranu (np. logowania)
-      Navigator.pop(context);
-    } else {
-      // Formularz nie jest poprawny
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please correct the errors in the form')),
+        const SnackBar(content: Text('Registration Successful!')),
       );
+
+      Navigator.pop(context);
     }
   }
 
@@ -50,141 +51,70 @@ class _RegisterViewState extends State<RegisterView> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Register'),
-          backgroundColor: MyColors.purpleColor,
-        ),
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 40),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    hintText: 'Email',
-                    prefixIcon: Icon(Icons.email, color: MyColors.purpleColor),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                      borderSide: BorderSide(color: MyColors.purpleColor),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                      borderSide: BorderSide(
-                        color: MyColors.purpleColor,
-                        width: 2.0,
-                      ),
-                    ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 30),
+                  CustomBackButton(onTap: () => Navigator.pop(context)),
+                  const SizedBox(height: 80),
+                  const CustomHeader(title: "Sign Up"),
+                  const SizedBox(height: 30),
+                  CustomTextField(
+                    controller: _fullNameController,
+                    hintText: "Full Name",
+                    prefixImage: 'assets/images/person.png',
+                    validator: (value) =>
+                    value!.isEmpty ? 'Full Name cannot be empty' : null,
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Email cannot be empty';
-                    }
-                    if (!RegExp(
-                        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-                        .hasMatch(value)) {
-                      return 'Enter a valid email address';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    hintText: 'Password',
-                    prefixIcon: Icon(Icons.lock, color: MyColors.purpleColor),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                      borderSide: BorderSide(color: MyColors.purpleColor),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                      borderSide: BorderSide(
-                        color: MyColors.purpleColor,
-                        width: 2.0,
-                      ),
-                    ),
+                  const SizedBox(height: 20),
+                  CustomTextField(
+                    controller: _emailController,
+                    hintText: "Email",
+                    prefixImage: 'assets/images/mail.png',
+                    validator: (value) {
+                      if (value!.isEmpty) return 'Email cannot be empty';
+                      if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+                          .hasMatch(value)) {
+                        return 'Enter a valid email';
+                      }
+                      return null;
+                    },
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Password cannot be empty';
-                    }
-                    final passwordRegex = RegExp(r'^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>])(?=.*[a-z]).{8,}$');
-                    if (!passwordRegex.hasMatch(value)) {
-                      return 'Password must be at least 8 characters,\ninclude a capital letter and a special character.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    hintText: 'Confirm Password',
-                    prefixIcon: Icon(Icons.lock, color: MyColors.purpleColor),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                      borderSide: BorderSide(color: MyColors.purpleColor),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                      borderSide: BorderSide(
-                        color: MyColors.purpleColor,
-                        width: 2.0,
-                      ),
-                    ),
+                  const SizedBox(height: 20),
+                  CustomPasswordField(
+                    controller: _passwordController,
+                    hintText: "Password",
+                    validator: (value) {
+                      if (value!.isEmpty) return 'Password cannot be empty';
+                      return null;
+                    },
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Confirm Password cannot be empty';
-                    }
-                    if (value != _passwordController.text) {
-                      return 'Passwords do not match';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 40),
-                Center(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: MyColors.pinkColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30.0),
-                      ),
-                      minimumSize: const Size(390, 50),
-                    ),
-                    onPressed: _register,
-                    child: const Text(
-                      'Register',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Inter',
-                        color: Colors.white,
-                      ),
-                    ),
+                  const SizedBox(height: 20),
+                  CustomPasswordField(
+                    controller: _confirmPasswordController,
+                    hintText: "Confirm Password",
+                    validator: (value) {
+                      if (value != _passwordController.text) {
+                        return 'Passwords do not match';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-              ],
+                  const SizedBox(height: 30),
+                  SubmitButton(label: "Sign Up", onPressed: _register),
+                  const SizedBox(height: 80),
+                  const SignInLink(),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
   }
 }
