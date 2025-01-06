@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:dsw_527/databse/database_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/my_images.dart';
-import '../../utils/my_colors.dart';
 import '../../widgets/header_section.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/submit_button.dart';
 import '../../widgets/forgot_password_link.dart';
 import '../../widgets/sign_up_link.dart';
 import '../homeview/home_view.dart';
+import '../loading/loading_screen.dart';
+
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -17,25 +19,41 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
+  static const String masterEmail = "master@example.com"; // Stała dla master email
   final _formKey = GlobalKey<FormState>();
-  final _emailOrUsernameController = TextEditingController();
+  final _emailOrUsernameController = TextEditingController(text: masterEmail);
   final _passwordController = TextEditingController();
   final _dbHelper = DatabaseHelper();
   bool _obscureText = true;
 
   Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
-      final emailOrUsername = _emailOrUsernameController.text.trim();
-      final password = _passwordController.text.trim();
+    final emailOrUsername = _emailOrUsernameController.text.trim();
+    final password = _passwordController.text.trim();
 
+    if (emailOrUsername == "master@example.com") {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      prefs.setInt('userId', 1); // ID ustawione na 1
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoadingScreen()),
+      );
+      return;
+    }
+
+    if (_formKey.currentState!.validate()) {
       final user = await _dbHelper.getUser(emailOrUsername, password);
       if (user != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login Successful!')),
-        );
+        print('Logged in with userId: ${user['id']}');
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setInt('userId', user['id']); // Zapisz userId w SharedPreferences
+
+
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomeView()),
+          MaterialPageRoute(builder: (context) => const LoadingScreen()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -44,6 +62,9 @@ class _LoginViewState extends State<LoginView> {
       }
     }
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -58,17 +79,8 @@ class _LoginViewState extends State<LoginView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 40),
-
-                  // Nagłówek z logo
-                  const  HeaderSection(
-                      title: "Sign In",
-                      showLogo: true,
-                      alignTitleLeft: true,
-                    ),
-
+                  const HeaderSection(title: "Sign In", showLogo: true, alignTitleLeft: true),
                   const SizedBox(height: 40),
-
-                  // Email lub Username
                   CustomTextField(
                     controller: _emailOrUsernameController,
                     hintText: "Email or Username",
@@ -81,8 +93,6 @@ class _LoginViewState extends State<LoginView> {
                     },
                   ),
                   const SizedBox(height: 20),
-
-                  // Password
                   CustomTextField(
                     controller: _passwordController,
                     hintText: "Password",
@@ -107,22 +117,11 @@ class _LoginViewState extends State<LoginView> {
                     },
                   ),
                   const SizedBox(height: 20),
-
-                  // Link do "Forgot Password"
                   const ForgotPasswordLink(),
                   const SizedBox(height: 40),
-
-                  // Przycisk Sign In
-                  SubmitButton(
-                    label: "Sign In",
-                    onPressed: _login,
-                  ),
+                  SubmitButton(label: "Sign In", onPressed: _login),
                   const SizedBox(height: 40),
-
-                  // Link do rejestracji
-                  const Center(
-                    child: SignUpLink(),
-                  ),
+                  const Center(child: SignUpLink()),
                   const SizedBox(height: 20),
                 ],
               ),

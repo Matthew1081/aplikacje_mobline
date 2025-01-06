@@ -5,4 +5,5 @@ class MyImages {
   static const lock = '$_assetsFolder/lock.png';
   static const mail = '$_assetsFolder/mail.png';
   static const back = '$_assetsFolder/back.png';
+  static const logo_bg = '$_assetsFolder/logo_bg.png';
 }
