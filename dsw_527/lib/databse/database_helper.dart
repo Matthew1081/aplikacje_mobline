@@ -24,6 +24,16 @@ class DatabaseHelper {
       version: 4, // Zwiększ wersję
       onCreate: (db, version) async {
         // Tworzenie tabel
+
+        await db.execute('''
+  CREATE TABLE metadata (
+    id INTEGER PRIMARY KEY,
+    signature TEXT
+  )
+''');
+
+        await db.insert('metadata', {'id': 1, 'signature': 'Project by Mateusz Kwiatkowski (MK52730)'});
+
         await db.execute('''
       CREATE TABLE users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -177,3 +187,5 @@ CREATE TABLE notes(
     );
   }
 }
+
+

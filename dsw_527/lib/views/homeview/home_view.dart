@@ -33,10 +33,10 @@ class _HomeViewState extends State<HomeView> {
 
   Future<void> _addOrEditNote({Map<String, dynamic>? note}) async {
     final TextEditingController _titleController = TextEditingController(
-      text: note?['title'] as String?? '',
+      text: note?['title']?.toString() ?? '',
     );
     final TextEditingController _noteController = TextEditingController(
-      text: note?['content'] as String?? '',
+      text: note?['content']?.toString() ?? '',
     );
 
     await showDialog(
@@ -71,31 +71,41 @@ class _HomeViewState extends State<HomeView> {
             onPressed: () async {
               final title = _titleController.text.trim();
               final content = _noteController.text.trim();
-              if (content.isNotEmpty) {
-                final now = DateTime.now();
-                final formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
 
-                if (note == null) {
-                  // Dodanie nowej notatki
-                  await _dbHelper.addNote(
-                    userId: widget.userId,
-                    title: title.isEmpty ? null : title,
-                    content: content,
-                    date: formattedDate,
-                  );
-                } else {
-                  // Aktualizacja istniejącej notatki
-                  await _dbHelper.updateNote(
-                    noteId: note['id'] as int,
-                    title: title.isEmpty ? null : title,
-                    content: content,
-                    date: formattedDate, // Aktualizacja daty
-                  );
-                }
-
-                Navigator.pop(context);
-                _loadNotes();
+              if (content.isEmpty) {
+                // Wyświetlenie SnackBar, jeśli notatka jest pusta
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Note content cannot be empty!'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+                return; // Zatrzymanie, jeśli brak treści
               }
+
+              final now = DateTime.now();
+              final formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+
+              if (note == null) {
+                // Dodanie nowej notatki
+                await _dbHelper.addNote(
+                  userId: widget.userId,
+                  title: title.isEmpty ? null : title,
+                  content: content,
+                  date: formattedDate,
+                );
+              } else {
+                // Aktualizacja istniejącej notatki
+                await _dbHelper.updateNote(
+                  noteId: note['id'] as int,
+                  title: title.isEmpty ? null : title,
+                  content: content,
+                  date: formattedDate,
+                );
+              }
+
+              Navigator.pop(context); // Zamknięcie dialogu
+              _loadNotes(); // Odświeżenie listy notatek
             },
             child: const Text('Save'),
           ),
@@ -103,6 +113,7 @@ class _HomeViewState extends State<HomeView> {
       ),
     );
   }
+
 
 
 
@@ -156,8 +167,8 @@ class _HomeViewState extends State<HomeView> {
                     vertical: 8,
                   ),
                   child: ListTile(
-                    title: Text(note['title'] as String?? 'Untitled Note'),
-                    subtitle: Text('Last updated: ${note['date']}'),
+                    title: Text(note['title']?.toString() ?? 'Untitled Note'),
+                    subtitle: Text('Last updated: ${note['date']?.toString()}'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
