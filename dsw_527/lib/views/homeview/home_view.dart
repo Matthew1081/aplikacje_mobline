@@ -33,10 +33,10 @@ class _HomeViewState extends State<HomeView> {
 
   Future<void> _addOrEditNote({Map<String, dynamic>? note}) async {
     final TextEditingController _titleController = TextEditingController(
-      text: note?['title'] ?? '',
+      text: note?['title'] as String?? '',
     );
     final TextEditingController _noteController = TextEditingController(
-      text: note?['content'] ?? '',
+      text: note?['content'] as String?? '',
     );
 
     await showDialog(
@@ -86,7 +86,7 @@ class _HomeViewState extends State<HomeView> {
                 } else {
                   // Aktualizacja istniejącej notatki
                   await _dbHelper.updateNote(
-                    noteId: note['id'],
+                    noteId: note['id'] as int,
                     title: title.isEmpty ? null : title,
                     content: content,
                     date: formattedDate, // Aktualizacja daty
@@ -156,7 +156,7 @@ class _HomeViewState extends State<HomeView> {
                     vertical: 8,
                   ),
                   child: ListTile(
-                    title: Text(note['title'] ?? 'Untitled Note'),
+                    title: Text(note['title'] as String?? 'Untitled Note'),
                     subtitle: Text('Last updated: ${note['date']}'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -167,7 +167,7 @@ class _HomeViewState extends State<HomeView> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteNote(note['id']),
+                          onPressed: () => _deleteNote(note['id'] as int),
                         ),
                       ],
                     ),

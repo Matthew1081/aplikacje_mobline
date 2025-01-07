@@ -27,11 +27,11 @@ class Note {
   // Konwersja mapy na obiekt Note
   factory Note.fromMap(Map<String, dynamic> map) {
     return Note(
-      id: map['id'],
-      userId: map['user_id'],
-      title: map['title'],
-      content: map['content'],
-      date: map['date'],
+      id: map['id'] as int, // Rzutowanie na int
+      userId: map['user_id'] as int, // Rzutowanie na int
+      title: map['title'] as String, // Rzutowanie na String? (może być null)
+      content: map['content'] as String, // Rzutowanie na String
+      date: map['date'] as String, // Rzutowanie na String
     );
   }
 }

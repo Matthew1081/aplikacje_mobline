@@ -48,7 +48,7 @@ class _LoginViewState extends State<LoginView> {
         print('Logged in with userId: ${user['id']}');
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
-        await prefs.setInt('userId', user['id']); // Zapisz userId w SharedPreferences
+        await prefs.setInt('userId', user['id'] as int ); // Zapisz userId w SharedPreferences
 
 
         Navigator.pushReplacement(
