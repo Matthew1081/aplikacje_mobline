@@ -84,7 +84,8 @@ class _HomeViewState extends State<HomeView> {
               }
 
               final now = DateTime.now();
-              final formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+              final formattedDate =
+              DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
 
               if (note == null) {
                 // Dodanie nowej notatki
@@ -114,11 +115,45 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-
-
-
-
-
+  Future<void> _viewNote(Map<String, dynamic> note) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(note['title']?.toString() ?? 'Untitled Note'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Content:',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(note['content'] as String),
+              const SizedBox(height: 16),
+              Text(
+                'Last updated: ${note['date']}',
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _addOrEditNote(note: note); // Przejdź do edytowania notatki
+            },
+            child: const Text('Edit'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _deleteNote(int noteId) async {
     await _dbHelper.deleteNote(noteId);
@@ -157,7 +192,7 @@ class _HomeViewState extends State<HomeView> {
                 style: TextStyle(fontSize: 18, color: Colors.grey),
               ),
             )
-                :ListView.builder(
+                : ListView.builder(
               itemCount: _notes.length,
               itemBuilder: (context, index) {
                 final note = _notes[index];
@@ -167,36 +202,35 @@ class _HomeViewState extends State<HomeView> {
                     vertical: 8,
                   ),
                   child: ListTile(
-                    title: Text(note['title']?.toString() ?? 'Untitled Note'),
-                    subtitle: Text('Last updated: ${note['date']?.toString()}'),
+                    onTap: () => _viewNote(note), // Dodaj funkcję podglądu
+                    title: Text(
+                        note['title']?.toString() ?? 'Untitled Note'),
+                    subtitle: Text('Last updated: ${note['date']}'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => _addOrEditNote(note: note),
+                          onPressed: () =>
+                              _addOrEditNote(note: note),
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteNote(note['id'] as int),
+                          onPressed: () =>
+                              _deleteNote(note['id'] as int),
                         ),
                       ],
                     ),
                   ),
-
                 );
               },
-            )
-
-
-
+            ),
           ),
           Text(
             'Logged in as userId: ${widget.userId}',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 10),
-
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
